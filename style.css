@@ -1,0 +1,22 @@
+html, body {
+    overflow: hidden;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+#controlsDiv {
+    z-index: 100;
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+    margin: auto;
+    background-color: white;
+    text-align: center;
+}
+#controlsDiv p1 {
+    font-size: 40px;
+    font-weight: bold;
+}
+
+#benchmarkCanvas {
+    background-color: white;
+}
