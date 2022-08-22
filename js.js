@@ -1,11 +1,14 @@
+// Init vars
 let canvas, fpsCounter, ctx, eventListener, canvasHeight, canvasWidth;
-let objects = 0;
+const objects = [];
 const times = [];
 let fps;
+const ballRadius = 10;
 
 // Clamp number between two values with the following line:
 const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 
+// Runs when HTML DOM is loaded
 function setup() {
     if (eventListener) {
         document.removeEventListener('DOMContentLoaded', setup);
@@ -19,12 +22,12 @@ function setup() {
     canvasHeight = canvas.height;
     canvasWidth = canvas.width;
 
-    refreshLoop();
+    benchmarkLoop();
 
-    loop();
-    setInterval(loop, 0);
+    draw();
 }
 
+// Runs when body calls onLoad
 function init() {
     if (document.readyState !== 'loading') {
         setup();
@@ -35,71 +38,33 @@ function init() {
 }
 
 function spawnDots(amount) {
-    objects = amount;
     for (let i = 0; i < amount; i++) {
+
         let x = Math.floor(Math.random() * canvasWidth);
         let y = Math.floor(Math.random() * canvasHeight);
+        let dx = Math.floor(Math.random() * 8);
+        let dy = Math.floor(Math.random() * 8);
         let color = Math.floor(Math.random()*16777215).toString(16);
-        let size = clamp(Math.floor(Math.random() * 25), 10, 45);
-        let dot = new Dot(x, y, size, '#' + color)
+        // let size = clamp(Math.floor(Math.random() * 25), 10, 45);
+        let dot = new Ball(x, y, dx, dy, '#' + color, 10)
+        objects.push(dot);
         dot.draw();
     }
 }
 
-function loop() {
+function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    spawnDots(1000);
+    objects.forEach(obj => {
+        obj.draw();
+    });
 }
 
-class Dot {
-    constructor (
-        x = 0, y = 0,
-        radius = 45,
-        fillColor = 'blue'
-    ) {
-        this.x = Number(x)
-        this.y = Number(y)
-        this.radius = Number(radius)
-        this.fillColor = fillColor
-    }
-
-    getX() {
-        return this.x;
-    }
-
-    getY() {
-        return this.y;
-    }
-
-    getRadius() {
-        return this.radius;
-    }
-
-    // draw dot to screen
-    draw() {
-        // saves the current styles set elsewhere
-        // to avoid overwriting them
-        ctx.save()
-
-        // set the styles for this shape
-        ctx.fillStyle = this.fillColor
-
-        // create the *path*
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
-
-        // draw the path to screen
-        ctx.fill();
-
-        // restores the styles from earlier
-        // preventing the colors used here
-        // from polluting other drawings
-        ctx.restore()
-    }
-}
-
-function refreshLoop() {
+// The benchmark loop
+function benchmarkLoop() {
     window.requestAnimationFrame(() => {
+        // Draw the frames on screen.
+        draw();
+        // Get the fps and amount of objects on screen.
         const now = performance.now();
         while (times.length > 0 && times[0] <= now - 1000) {
             times.shift();
@@ -107,8 +72,47 @@ function refreshLoop() {
         times.push(now);
         fps = times.length;
 
-        fpsCounter.textContent = "fps: " + fps + " | objects: " + objects;
+        fpsCounter.textContent = "fps: " + fps + " | objects: " + objects.length;
 
-        refreshLoop();
+        //Add dots to screen
+        if(fps > 40) {
+            spawnDots(10)
+        }
+        //spawnDots(10);
+
+        benchmarkLoop();
     });
+}
+
+class Ball {
+    constructor(x, y, dx, dy, ballColour, ballRadius) {
+        this.x = x;
+        this.y = y;
+        this.dx = dx;
+        this.dy = dy;
+        this.ballColour = ballColour;
+        this.ballRadius = ballRadius;
+    }
+
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.ballRadius, 0, Math.PI*2);
+        ctx.fillStyle = this.ballColour;
+        ctx.fill();
+        ctx.closePath();
+
+        this.update();
+    }
+
+    update() {
+        if(this.x + this.dx > canvasWidth-this.ballRadius || this.x + this.dx < this.ballRadius) {
+            this.dx = -this.dx;
+        }
+        if(this.y + this.dy > canvasHeight-this.ballRadius || this.y + this.dy < this.ballRadius) {
+            this.dy = -this.dy;
+        }
+
+        this.x += this.dx;
+        this.y += this.dy;
+    }
 }
